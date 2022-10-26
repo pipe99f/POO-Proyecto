@@ -299,18 +299,84 @@ def actualizarNota(con, identificacion):
 ##Clasificación
 
 
-def crearTablaClasificación(con, identificacion, codigo):
+def crearTablaClasificación(con):
     cursorObj = con.cursor()
     cursorObj.execute(
-        f"""CREATE TABLE historia (identificacion integer , 
+        f"""CREATE TABLE clasificacion (identificacion integer , 
                                    nombre text, 
                                      apellido text, 
                                      cantidadMateriasTomadas integer, 
                                    creditosAcumulados integer,
-                                   promedio integer
+                                   promedio real
                                    )"""
     )
     con.commit()
+
+def actualizarTablaClasificacion(con):
+
+    cursorObj = con.cursor()
+    cursorObj.execute('DELETE FROM clasificacion')
+    cursorObj.execute("""SELECT identificacion FROM historia""")
+
+    ids = cursorObj.fetchall()
+    #como los ids se repiten, voy a crear un conjunto para que aparezcan solo una vez
+    idSet = {i[0] for i in ids}
+
+    for i in idSet:
+
+        sumaCreditos = cursorObj.execute(f"""SELECT  SUM(creditos) FROM historia WHERE identificacion = {i}""")
+        sumaCreditos = sumaCreditos.fetchall()
+
+        promedio = cursorObj.execute(f"""SELECT  AVG(notaFinal) FROM historia WHERE identificacion = {i}""")
+        promedio = promedio.fetchall()
+
+        cantidadMaterias = cursorObj.execute(f"""SELECT  COUNT(identificacion) FROM historia WHERE identificacion = {i}""")
+        cantidadMaterias = cantidadMaterias.fetchall()
+
+        nombre = cursorObj.execute(f"""SELECT  nombre FROM estudiantes WHERE identificacion = {i}""")
+        nombre = nombre.fetchall()
+
+        apellido = cursorObj.execute(f"""SELECT  apellido FROM estudiantes WHERE identificacion = {i}""")
+        apellido = apellido.fetchall()
+        
+        row = (i, nombre[0][0], apellido[0][0], cantidadMaterias[0][0], sumaCreditos[0][0], promedio[0][0])
+        rowStrings = (str(i) for i in row)
+        cursorObj.execute('INSERT INTO clasificacion VALUES (?,?,?,?,?,?)', row)
+
+    con.commit()
+    # for i in idSet:
+
+def consultaClasificacion(con):
+    cursorObj = con.cursor()
+    clasificacion = cursorObj.execute('SELECT nombre, apellido, promedio FROM clasificacion ORDER BY promedio DESC')
+    posicion = 0
+    for i in clasificacion:
+        posicion += 1
+        print('Posición', posicion)
+        print('Nombre:', i[0], i[1])
+        print('Nota:', i[2], '\n')
+
+def consultaPosicionSegunId(con, id):
+    cursorObj = con.cursor()
+    clasificacion = cursorObj.execute(f'SELECT * FROM clasificacion ORDER BY promedio DESC')
+
+    posicion = 0
+    for i in clasificacion:
+        posicion += 1
+        if id == i[0]:
+            print('Posición', posicion)
+            print('Nombre:', i[1], i[2])
+            print('Cantidad de materias cursadas:', i[3])
+            print('Créditos acumulados:', i[4])
+            print('Promedio: ', i[5])
+
+            break
+
+
+
+
+
+    
 
 
 def cerrarBD(con):
@@ -385,11 +451,17 @@ def main():
     
     ##Historia
     # crearTablaHistoria(miCon)
-    infoHistoria = leerInfoHistoria()
-    insertarTablaHistoria(miCon, infoHistoria)
+    # infoHistoria = leerInfoHistoria()
+    # insertarTablaHistoria(miCon, infoHistoria)
     # consultarHistoriaAcademica(miCon, 123)
     # borrarinfoTablaHistoria(miCon, 123)
-    actualizarNota(miCon, 123)
+    # actualizarNota(miCon, 123)
+
+    ##Clasificación
+    # crearTablaClasificación(miCon)
+    # actualizarTablaClasificacion(miCon)
+    # consultaClasificacion(miCon)
+    # consultaPosicionSegunId(miCon, 234)
 
     # menu(miCon)
     cerrarBD(miCon)
