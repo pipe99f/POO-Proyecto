@@ -127,7 +127,7 @@ def crearTablaEstudiante(con):
     cursorObj = con.cursor()
     cursorObj.execute(
         f"""CREATE TABLE estudiantes (identificacion integer PRIMARY KEY, 
-                                     notaFinal text, 
+                                     nombre text, 
                                      apellido text, 
                                      carrera text, 
                                      fechaNacimiento text, 
@@ -170,7 +170,6 @@ def leerInfoEstudiante():
         cantidadMatriculas,
         blobFoto,
     )
-    print("La información del estudiante es: ")
     return infoEstudiante
 
 
@@ -192,7 +191,7 @@ def actualizarTablaEstudiante(con, idEstudiante, columna):
         + '" ="'
         + nuevoValor
         + '"WHERE identificacion ="'
-        + idEstudiante
+        + str(idEstudiante)
         + '"'
     )
     cursorObjt.execute(actualizar)
@@ -216,7 +215,7 @@ def consultarTablaEstudiantes(con):
 
 def consultarInfoEstudiante(con, id):
     cursorObj = con.cursor()
-    cursorObj.execute("SELECT * FROM estudiantes WHERE codigo = ?", id)
+    cursorObj.execute(f"SELECT * FROM estudiantes WHERE identificacion = {id}")
     infoMateria = cursorObj.fetchall()
     for row in infoMateria:
         print("Id: ", row[0])
@@ -237,18 +236,38 @@ def crearTablaHistoria(con):
     cursorObj.execute(
         f"""CREATE TABLE historia (identificacion integer , 
                                    codigo integer, 
-                                     notaFinal text, 
-                                     creditos text, 
+                                     notaFinal real, 
+                                     creditos integer, 
                                    PRIMARY KEY(identificacion, codigo))"""
     )
     con.commit()
+
+def leerInfoHistoria():
+    id = input("Numero de identificación: ")
+    codigo = input("Código de la materia: ")
+    notaFinal = input("Nota final: ")
+    creditos = input("Número de créditos: ")
+    infoEstudiante = (
+        id,
+        codigo,
+        notaFinal,
+        creditos,
+    )
+    return infoEstudiante
+
+def insertarTablaHistoria(con, infoHistoria):
+    cursorObj = con.cursor()  # recorremos la base de datos con el objeto de conexión
+    cursorObj.execute(
+        """INSERT INTO historia VALUES (?,?,?,?)""", infoHistoria
+    )
+    # insertamos información en la tabla materias
+    con.commit()  # guarda la tabla en el drive
 
 
 def consultarHistoriaAcademica(con, identificacion):
     cursorObj = con.cursor()
     cursorObj.execute(
-        "SELECT codigo, notaFinal, creditos FROM estudiantes WHERE identificacion = ?",
-        identificacion,
+        f"SELECT codigo, notaFinal, creditos FROM historia WHERE identificacion = {identificacion}",
     )  # se puede usar "*" para consultar todos los campos
     filas = cursorObj.fetchall()
     for row in filas:
@@ -257,22 +276,22 @@ def consultarHistoriaAcademica(con, identificacion):
         creditos = row[2]
         print("Codigo de la materia: ", codigo)
         print("La nota final es: ", notaFinal)
-        print("Número de créditos: ", creditos)
+        print("Número de créditos: ", creditos, '\n')
 
 
 def borrarinfoTablaHistoria(con, identificacion):
     cursorObjt = con.cursor()
     materiaBorrar = input("Codigo de la materia para borrar: ")
-    borrar = f"DELETE FROM materias WHERE identificacion = {identificacion} AND codigo = {materiaBorrar}"
+    borrar = f"DELETE FROM historia WHERE identificacion = {identificacion} AND codigo = {materiaBorrar}"
     cursorObjt.execute(borrar)
     con.commit()
 
 
 def actualizarNota(con, identificacion):
     cursorObjt = con.cursor()  # cursor recorrer base de datos
-    codigoMateria = input("Qué materia desea actualizar?")
+    codigoMateria = input("Qué materia desea actualizar? ")
     nuevaNota = input("Actualice la nota: ")
-    actualizar = f"UPDATE materias SET notaFinal = {nuevaNota} WHERE identificacion = {identificacion} AND codigo = {codigoMateria}"
+    actualizar = f"UPDATE historia SET notaFinal = {nuevaNota} WHERE identificacion = {identificacion} AND codigo = {codigoMateria}"
     cursorObjt.execute(actualizar)
     con.commit()  # guardamos tabla en el drive
 
@@ -349,12 +368,29 @@ def main():
     # # crearTablaMaterias(miCon)
     # miMateria = leerInfoMaterias()
     # insertarTablaMaterias(miCon, miMateria)
-    consultarTablaMaterias(miCon)
-    consultarInfoMateria(miCon, "4")
+    # consultarTablaMaterias(miCon)
+    # consultarInfoMateria(miCon, "4")
     # codMatact= input('Codigo de la materia a actualizar: ')
     # actualizarTablaMaterias(miCon, codMatact)
     # borrarinfoTablaMaterias(miCon)
     # promedioTablaMaterias(miCon)
+
+    ##Estudiante
+    # crearTablaEstudiante(miCon)
+    # infoEstudiante = leerInfoEstudiante()
+    # insertarTablaEstudiante(miCon, infoEstudiante)
+    # actualizarTablaEstudiante(miCon, 123, 'apellido')
+    # consultarTablaEstudiantes(miCon)
+    # consultarInfoEstudiante(miCon, 123)
+    
+    ##Historia
+    # crearTablaHistoria(miCon)
+    infoHistoria = leerInfoHistoria()
+    insertarTablaHistoria(miCon, infoHistoria)
+    # consultarHistoriaAcademica(miCon, 123)
+    # borrarinfoTablaHistoria(miCon, 123)
+    actualizarNota(miCon, 123)
+
     # menu(miCon)
     cerrarBD(miCon)
 
