@@ -1,7 +1,11 @@
+#REQUISITOS
+#Instalar la librería PyQt5 para poder ejecutar la interfaz gráfica
+#Instalar sqlite y la librería sqlite3 para poder manipular las bases de datos del programa
+
 import sqlite3
 from sqlite3 import Error
 import datetime
-import guiMiniSia
+import guiMiniSia  # Este es el módulo que permite ejecutar la interfaz gráfica de la tabla
 
 ###Clase DataBase
 #Al inicializar un objeto con esta clase este actuará como una referencia a nuestra base de datos
@@ -488,7 +492,7 @@ class ClaseClasificacion(_MetodosSuper):
                 apellido[0][0],
                 cantidadMaterias[0][0],
                 sumaCreditos[0][0],
-                promedio[0][0],
+                str(promedio[0][0])[0:4],
             )
             rowStrings = (str(i) for i in row)
             self._cursorObj.execute("INSERT INTO clasificacion VALUES (?,?,?,?,?,?)", row) # se agrega la tupla a la tabla
@@ -529,6 +533,7 @@ class ClaseClasificacion(_MetodosSuper):
                 print("{:<31}{:>30}".format("Promedio: ", i[5]))
                 break
 
+    #Retorna la lista "fetchall" para todas las columnas de la tabla "Clasificacion" de manera ordenada según el promedio
     def creaTupletPosiciones(self):
         self.__actualizarTablaClasificacion()
         # cursorObj = self._con.cursor()
@@ -536,13 +541,6 @@ class ClaseClasificacion(_MetodosSuper):
             f"SELECT * FROM clasificacion ORDER BY promedio DESC"
         )
         clasificacion = self._cursorObj.fetchall()
-        data = []
-        posicion = 0
-        for i in clasificacion:
-            posicion += 1
-            if id == str(i[0]):
-                data.append((i[0], i[1], i[2], i[3], i[4], i[5]))
-                break
         return clasificacion
 
 
@@ -654,8 +652,8 @@ def menu(materias,estudiantes,historiasAcademicas,clasificaciones):
                 elif opcionClasificacion == "2":
                     clasificaciones.consultaPosicionSegunId()
                 elif opcionClasificacion == "3":
+                    # Data contiene la lista "fetchall" de la tabla clasificaciones que es con la cual se va a crear la tabla en la UI
                     data = clasificaciones.creaTupletPosiciones()
-                    print(data)
                     guiMiniSia.main(data)
                 elif opcionClasificacion == "4":
                     salirClasificacion = True
@@ -667,7 +665,6 @@ def menu(materias,estudiantes,historiasAcademicas,clasificaciones):
         Programa Finalizado. Gracias por utilizar nuestros servicios
     """
     )
-
 
 def main():
     #Se crea la base de datos
@@ -682,5 +679,4 @@ def main():
     menu(materias,estudiantes,historiasAcademicas,clasificaiones)
     baseDeDatos.cerrarBD()
 
-if __name__ == '__main__':
-    main()
+main()
